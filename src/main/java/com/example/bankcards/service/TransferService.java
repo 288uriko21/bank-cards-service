@@ -210,6 +210,35 @@ public class TransferService {
                 to.getBalance()
         );
     }
+    
+    @Transactional(readOnly = true)
+    public List<TransactionHistoryItem> getCardTransactions(String username, Long cardId) {
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(user.getRole());
+
+        CardEntity card = cardRepository.findById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+
+        if (!isAdmin && !card.getOwner().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You can view only your own card transactions");
+        }
+
+        List<TransactionEntity> txs = transactionRepository
+                .findByFromCardOrToCard(card, card);
+
+        return txs.stream()
+                .map(tx -> new TransactionHistoryItem(
+                        tx.getId(),
+                        tx.getFromCard().getId(),
+                        tx.getToCard().getId(),
+                        tx.getAmount(),
+                        tx.getStatus(),
+                        tx.getMessage(),
+                        tx.getCreatedAt()
+                ))
+                .toList();
+    }
 
 }

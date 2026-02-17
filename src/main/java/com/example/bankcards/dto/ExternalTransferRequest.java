@@ -1,7 +1,9 @@
 package com.example.bankcards.dto;
 
 import java.math.BigDecimal;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Запрос на перевод на карту другого пользователя")
 public class ExternalTransferRequest {
 
     private Long fromCardId;

@@ -3,6 +3,9 @@ package com.example.bankcards.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Элемент истории переводов по карте или пользователю")
 public class TransactionHistoryItem {
 
     private Long id;

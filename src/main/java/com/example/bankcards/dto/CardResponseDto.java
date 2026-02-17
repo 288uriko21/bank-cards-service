@@ -2,15 +2,48 @@ package com.example.bankcards.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Информация о банковской карте")
 public class CardResponseDto {
-
+	
+	@Schema(description = "Идентификатор карты", example = "1")
     private Long id;
-    private String maskedNumber; // **** **** **** 1234
+	
+    @Schema(
+    	    description = "Маскированный номер сгенерированной карты",
+    	    example = "**** **** **** 0000"
+    	)
+    private String maskedNumber; 
+    
+    @Schema(
+            description = "Срок действия карты",
+            example = "2026-12-31"
+        )
     private LocalDate expiryDate;
+    
+    @Schema(
+            description = "Статус карты (ACTIVE, BLOCKED, EXPIRED, DELETED)",
+            example = "ACTIVE"
+        )
     private String status;
+    
+    @Schema(
+            description = "Текущий баланс карты",
+            example = "950.50"
+        )
     private BigDecimal balance;
+    
+    @Schema(
+            description = "ID владельца карты",
+            example = "1"
+        )
     private Long ownerId;
+    
+    @Schema(
+            description = "Логин владельца карты",
+            example = "alice"
+        )
     private String ownerUsername;
 
     public CardResponseDto() {

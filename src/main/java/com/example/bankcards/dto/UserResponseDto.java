@@ -1,5 +1,7 @@
 package com.example.bankcards.dto;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Ответ на создание пользователя")
 public class UserResponseDto {
 
     private Long id;

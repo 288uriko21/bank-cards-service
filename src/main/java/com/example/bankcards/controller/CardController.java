@@ -14,13 +14,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.example.bankcards.service.TransferService;
 import com.example.bankcards.dto.TransactionHistoryItem;
+import com.example.bankcards.exception.BusinessException;
+import jakarta.validation.Valid;
+
+
 
 
 import java.util.List;
 import java.util.stream.Collectors;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/api/cards")
+@Tag(name = "Cards", description = "Операции с банковскими картами")
 public class CardController {
 
     private final CardRepository cardRepository;
@@ -34,12 +43,25 @@ public class CardController {
         this.userRepository = userRepository;
         this.transferService = transferService;
     }
-
+    
+    @Operation(
+            summary = "Получить все карты (ADMIN)",
+            description = "Возвращает список всех карт в системе."
+        )
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Успешно"),
+            @ApiResponse(responseCode = "401", description = "Неавторизован"),
+            @ApiResponse(responseCode = "403", description = "Недостаточно прав")
+        })
 	@GetMapping
 	public List<CardResponseDto> getAll() {
 		return cardRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
 	}
-
+    
+    @Operation(
+            summary = "Мои карты",
+            description = "Возвращает карты текущего аутентифицированного пользователя."
+        )
 	@GetMapping("/my")
 	public List<CardResponseDto> getMyCards(java.security.Principal principal) {
 		String username = principal.getName();
@@ -50,17 +72,28 @@ public class CardController {
 		return cardRepository.findByOwner(user).stream().map(this::toDto).collect(Collectors.toList());
 	}
 	
-	@GetMapping("/{id}/transactions")
+    @Operation(
+            summary = "Транзакции пользователя с заданным id (ADMIN)"
+        )
+	@GetMapping("/{id}/transfers")
 	public List<TransactionHistoryItem> getCardTransactions(@PathVariable Long id,
 	                                                        java.security.Principal principal) {
 	    String username = principal.getName();
 	    return transferService.getCardTransactions(username, id);
 	}
 
-
+    @Operation(
+    	    summary = "Создать банковскую карту",
+    	    description = """
+    	Создает новую карту и возвращает её данные с замаскированным номером. 
+    	Администратор может создать карту для любого пользователя, передав его ID в поле userId. 
+    	Обычный пользователь всегда создаёт карту только для себя — даже если в запросе указан другой userId, будет использован текущий аутентифицированный пользователь. 
+    	Номер карты должен быть строкой из ровно 16 цифр; при попытке использовать уже существующий номер будет возвращена бизнес-ошибка.
+    	"""
+    	)
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public CardResponseDto create(@RequestBody CardCreateRequest request, java.security.Principal principal) {
+	public CardResponseDto create(@Valid @RequestBody CardCreateRequest request, java.security.Principal principal) {
 
 		String username = principal.getName();
 
@@ -77,6 +110,10 @@ public class CardController {
 		} else {
 			owner = currentUser;
 		}
+		
+		if (cardRepository.existsByCardNumber(request.getCardNumber())) {
+	        throw new BusinessException("Card with this number already exists");
+	    }
 
 		CardEntity card = new CardEntity();
 		card.setCardNumber(request.getCardNumber());
@@ -89,6 +126,16 @@ public class CardController {
 		return toDto(saved);
 	}
 	
+    @Operation(
+    	    summary = "Запрос на блокировку собственной карты",
+    	    description = "Карта с id помечается BLOCKED"
+
+    	)
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Успешно"),
+        @ApiResponse(responseCode = "401", description = "Неавторизован"),
+        @ApiResponse(responseCode = "404", description = "Карта или пользователь не найдены")
+    })
 	@PostMapping("/{id}/block-request")
 	@ResponseStatus(HttpStatus.OK)
 	public CardResponseDto requestBlock(@PathVariable Long id,
@@ -110,7 +157,11 @@ public class CardController {
 	    return toDto(saved);
 	}
 
+	 @Operation(
+	    	    summary = "Запрос на блокировку любой карты (ADMIN)",
+	    	    description = "Карта с id помечается BLOCKED"
 
+	    	)
 	@PatchMapping("/{id}/block")
 	@ResponseStatus(HttpStatus.OK)
 	public CardResponseDto blockCard(@PathVariable Long id) {
@@ -121,7 +172,11 @@ public class CardController {
 		return toDto(saved);
 	}
 
+	 @Operation(
+	    	    summary = "Запрос на активацию любой карты (ADMIN)",
+	    	    description = "Карта с id помечается ACTIVE"
 
+	    	)
 	@PatchMapping("/{id}/activate")
 	@ResponseStatus(HttpStatus.OK)
 	public CardResponseDto activateCard(@PathVariable Long id) {
@@ -132,7 +187,11 @@ public class CardController {
 		return toDto(saved);
 	}
 
+	 @Operation(
+	    	    summary = "Запрос на удаление любой карты (ADMIN)",
+	    	    description = "Карта с id помечается DELETED"
 
+	    	)
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void deleteCard(@PathVariable Long id) {

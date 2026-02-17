@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -23,7 +24,14 @@ public class AuthController {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
-
+    @Operation(
+    	    summary = "Логин и получение JWT",
+    	    description = """
+    	Возвращает JWT-токен для доступа к защищённым операциям.
+    	Сначала вызовите этот эндпоинт, затем нажмите кнопку Authorize в Swagger UI
+    	и вставьте значение в формате: Bearer <полученный токен>.
+    	"""
+    	)
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     public LoginResponse login(@RequestBody LoginRequest request) {

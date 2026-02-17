@@ -12,4 +12,6 @@ public interface CardRepository extends JpaRepository<CardEntity, Long> {
     List<CardEntity> findByOwner(UserEntity owner);
 
     Optional<CardEntity> findByCardNumber(String cardNumber);
+    
+    boolean existsByCardNumber(String cardNumber);
 }

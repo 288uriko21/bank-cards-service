@@ -38,6 +38,11 @@ public class SecurityConfig {
                         // открытые эндпоинты
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
 
                         // только ADMIN может вызывать GET /api/cards (все карты)
                         .requestMatchers(HttpMethod.GET, "/api/cards").hasRole("ADMIN")

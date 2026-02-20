@@ -1,160 +1,43 @@
-# 🚀 Система управления банковскими картами
+# Bank Cards REST API
 
-Backend‑приложение на Java / Spring Boot для управления банковскими картами: создание и управление картами, просмотр, переводы, лимиты и безопасность с JWT.
+Учебный REST‑сервис мини‑банка на Spring Boot: пользователи, банковские карты и переводы между ними. 
 
----
+## Технологии
 
-## ✅ Текущий функционал
+- Java 17, Spring Boot 3  
+- Spring Web, Spring Security (JWT)  
+- Spring Data JPA (Hibernate) 
+- PostgreSQL 
+- Liquibase (миграции БД)  
+- Swagger / OpenAPI (документация API)  
+- Docker / Docker Compose  
+- Postman (ручное тестирование API)
 
-### Пользователи, роли и аутентификация
+## Запуск
 
-- Пользователи и роли (`ADMIN`, `USER`) хранятся в таблице `users` базы данных.
-- Аутентификация через Spring Security:
-  - кастомный `JpaUserDetailsService` загружает пользователей из БД;
-  - роль берётся из поля `role` (`ADMIN` / `USER`) в `UserEntity` и конвертируется в `ROLE_ADMIN` / `ROLE_USER`.
+1. Клонировать репозиторий:
 
-#### JWT‑аутентификация
+```bash
+   git clone https://github.com/288uriko21/bank-cards-service.git
+   cd bank-cards-service
+```
+2. Поднять PostgreSQL в Docker:
 
-- `POST /api/auth/login` — принимает `LoginRequest` (`username`, `password`), проверяет учётные данные через `AuthenticationManager` и возвращает `LoginResponse` с `accessToken` и типом `Bearer`.
-- `JwtUtil` генерирует и валидирует JWT, в клеймах хранятся `username` и роли.
-- `JwtAuthenticationFilter` (на основе `OncePerRequestFilter`) извлекает заголовок `Authorization: Bearer <token>`, валидирует токен и заполняет `SecurityContext` для всех защищённых запросов.
+```bash
+docker compose up -d postgres
+```
+3. Запустить приложение:
 
----
+```bash
+mvn spring-boot:run
+```
 
-### Карты
+При первом запуске Liquibase создаст таблицы и добавит тестовых пользователей.
 
-Сущность `CardEntity`:
+Тестовые пользователи:
 
-- номер карты (строка, хранится в БД, в API возвращается в маскированном виде `**** **** **** 1234`);
-- владелец (`UserEntity`);
-- срок действия;
-- статус (`ACTIVE`, `BLOCKED`, `EXPIRED`, `DELETED`);
-- баланс.
+ - admin / admin — роль ADMIN
 
-Эндпоинты:
+ - user / user — роль USER
 
-- `GET /api/cards` — все карты, только для `ADMIN`.
-- `GET /api/cards/{id}/transactions` — все транзакции по конкретному пользователю, только для `ADMIN`.
-- `GET /api/cards/my` — карты текущего аутентифицированного пользователя.
-- `POST /api/cards` — создание карты:
-  - `ADMIN` может создать карту любому пользователю по `userId`;
-  - `USER` может создать карту только себе (даже если в запросе передан другой `userId`).
-- `PATCH /api/cards/{id}/block` — блокировка карты (только `ADMIN`).
-- `PATCH /api/cards/{id}/activate` — активация карты (только `ADMIN`).
-- `DELETE /api/cards/{id}` — мягкое удаление (статус `DELETED`, карта остаётся в истории).
-- `POST /api/cards/{id}/block-request` — запрос блокировки своей карты (доступен только владельцу; проверка ownership в контроллере/сервисе).
-
----
-
-### Переводы и транзакции
-
-Сущность `TransactionEntity`:
-
-- `fromCard`, `toCard`, `amount`;
-- `createdAt`;
-- `status` (`SUCCESS`, `FAILED` и т.п.);
-- `message` (причина ошибки);
-- `type` (`INTERNAL`, `EXTERNAL`) — тип операции (внутренний/внешний перевод).
-
-#### Внутренний перевод между своими картами (`INTERNAL`)
-
-- `POST /api/transfers` — перевод между двумя картами текущего пользователя.
-
-Проверки:
-
-- обе карты принадлежат текущему пользователю;
-- статус карт — `ACTIVE`;
-- достаточно средств на карте‑отправителе.
-
-При успехе:
-
-- создаётся `TransactionEntity` со статусом `SUCCESS`, типом `INTERNAL`;
-- обновляются балансы карт.
-
-#### Внешний перевод (`EXTERNAL`)
-
-- `POST /api/transfers/external` — перевод с карты текущего пользователя на любую другую карту.
-
-Для `USER`:
-
-- списывать можно только со своих карт;
-- действует суточный лимит общей суммы внешних переводов (по `TransactionEntity` с `type = 'EXTERNAL'` и `status = 'SUCCESS'` за текущий день);
-- при превышении лимита или недостатке средств:
-  - создаётся `TransactionEntity` со статусом `FAILED`, типом `EXTERNAL` и текстом причины;
-  - наружу возвращается бизнес‑ошибка (HTTP 400).
-
-Для `ADMIN`:
-
-- можно переводить между любыми картами (без ограничения владельца);
-- суточный лимит не применяется.
-
-#### История операций
-
-- `GET /api/transfers/my` — история операций, где текущий пользователь является отправителем (`fromCard.owner`).
-- Возвращается список DTO `TransactionHistoryItem`:
-  - `id`, `fromCardId`, `toCardId`, `amount`, `status`, `message`, `createdAt`.
-
----
-
-### Обработка ошибок
-
-- Глобальный обработчик (`GlobalExceptionHandler`) возвращает единый формат `ApiError`:
-  - `timestamp`, `status`, `error`, `message`, `path`.
-- Используется кастомное `BusinessException` для бизнес‑ошибок (лимит, недостаточно средств, попытка перевода с чужой карты и т.п.):
-  - при таких ошибках:
-    - создаётся `TransactionEntity` со статусом `FAILED` и нужными `message` / `type`;
-    - транзакция для этого исключения не откатывается (`noRollbackFor`), чтобы FAILED‑операция осталась в истории;
-    - клиент получает HTTP 400 с заполненным `ApiError`.
-
----
-
-### Безопасность и доступ
-
-- Spring Security:
-  - пользователи загружаются из БД (`JpaUserDetailsService` + `PasswordEncoder` с BCrypt);
-  - доступ контролируется в `SecurityConfig`:
-    - `/ping` и `/api/auth/login` — открыты всем;
-    - `GET /api/cards`, а также `PATCH` / `DELETE` на `/api/cards/{id}` — только для `ADMIN`;
-    - остальные операции с картами и переводами — для любого аутентифицированного пользователя с валидным JWT.
-- Для всех защищённых эндпоинтов требуется заголовок `Authorization: Bearer <jwt>` вместо Basic Auth.
-
----
-
-### Инфраструктура
-
-- БД: PostgreSQL в Docker‑контейнере.
-- Данные хранятся в Docker‑томе, поэтому сохраняются между перезапусками контейнера.
-- Работа с БД через Spring Data JPA:
-  - `UserEntity`, `CardEntity`, `TransactionEntity` отражают структуру таблиц;
-  - репозитории содержат запросы для поиска карт по владельцу и агрегаций по транзакциям (например, сумма внешних переводов за день).
-- Логическое мягкое удаление карт через статус `DELETED`.
-
----
-
-## 🎯 Ближайшие планы
-
-### Swagger / OpenAPI
-
-- Подключить `springdoc-openapi` к проекту.
-- Сгенерировать Swagger UI для всех REST‑эндпоинтов (`/swagger-ui.html` или `/swagger-ui/index.html`).
-- При необходимости настроить группировку и описания схем (DTO).
-
-### Поиск и пагинация для `/api/cards/my`
-
-- Параметры `page`, `size`, дополнительные фильтры (например, по статусу, последним цифрам номера).
-- Возвращать `Page<CardResponseDto>` или обёртку с:
-  - `content`,
-  - `totalElements`,
-  - `totalPages`,
-  - `page`,
-  - `size`.
-
-### История операций по карте
-
-- Пагинация и сортировка по `createdAt`.
-
-### Документация и тесты
-
-- Оформить OpenAPI/Swagger как основную документацию API.
-- Добавить юнит‑тесты для `TransferService` и, при желании, интеграционные тесты для ключевых сценариев (перевод, лимит, блокировка карт).
-
+Полное описание эндпоинтов доступно после запуска приложения. Swagger UI: http://localhost:8080/swagger-ui/index.html

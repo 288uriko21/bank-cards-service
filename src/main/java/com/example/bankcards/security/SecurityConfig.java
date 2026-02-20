@@ -43,7 +43,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**"
                         ).permitAll()
-
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
                         // только ADMIN может вызывать GET /api/cards (все карты)
                         .requestMatchers(HttpMethod.GET, "/api/cards").hasRole("ADMIN")
 

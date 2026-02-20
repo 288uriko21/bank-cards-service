@@ -7,10 +7,12 @@ spring:
     username: bankuser
     password: bankpass
     driver-class-name: org.postgresql.Driver
+    
+
 
   jpa:
     hibernate:
-      ddl-auto: update   # для разработки, потом заменим на validate/none
+      ddl-auto: none   # validate/none/update
     show-sql: true
     properties:
       hibernate:
@@ -18,4 +20,4 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   liquibase:
-    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yml

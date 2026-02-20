@@ -37,7 +37,36 @@ mvn spring-boot:run
 Тестовые пользователи:
 
  - admin / admin — роль ADMIN
-
  - user / user — роль USER
+
+### Основные эндпоинты
+* Аутентификация
+    - POST /api/auth/login — логин, получение JWT‑токена
+    - PATCH /api/auth/me/password — изменение своего пароля
+
+* Пользователи (ADMIN)
+    - GET /api/users — получить всех пользователей
+    - POST /api/users — создать пользователя
+    - PATCH /api/users/{id}/reset-password — сброс пароля пользователя
+    - GET /api/users/{id} — получить пользователя по id
+    - DELETE /api/users/{id} — удалить пользователя
+
+* Карты
+    - GET /api/cards — все карты (ADMIN)
+    - POST /api/cards — создать банковскую карту
+    - POST /api/cards/{id}/block-request — запрос на блокировку своей карты
+    - PATCH /api/cards/{id}/block — блокировка любой карты (ADMIN)
+    - PATCH /api/cards/{id}/activate — активация карты (ADMIN)
+    - GET /api/cards/{id}/transfers — транзакции по карте (ADMIN)
+    - GET /api/cards/my — карты текущего пользователя
+    - DELETE /api/cards/{id} — удалить карту (ADMIN)
+
+* Переводы
+    - POST /api/transfers — внутренний перевод между своими картами
+    - POST /api/transfers/external — внешний перевод на любую карту
+    - GET /api/transfers/my — мои переводы, история
+
+* Прочее
+    - GET /ping — проверка доступности сервиса 
 
 Полное описание эндпоинтов доступно после запуска приложения. Swagger UI: http://localhost:8080/swagger-ui/index.html

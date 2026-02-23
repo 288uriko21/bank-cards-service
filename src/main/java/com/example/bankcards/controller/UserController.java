@@ -14,12 +14,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 
 import java.security.SecureRandom;
 
 @RestController
 @RequestMapping("/api/users")
 @Tag(name = "Users", description = "Управление пользователями (только для администратора)")
+@SecurityRequirement(name = "BearerAuth")
 public class UserController {
 
 	private final UserRepository userRepository;

@@ -26,10 +26,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/cards")
 @Tag(name = "Cards", description = "Операции с банковскими картами")
+@SecurityRequirement(name = "BearerAuth")
 public class CardController {
 
     private final CardRepository cardRepository;

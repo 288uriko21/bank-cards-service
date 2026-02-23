@@ -8,7 +8,7 @@
 - Spring Web, Spring Security (JWT)  
 - Spring Data JPA (Hibernate) 
 - PostgreSQL 
-- Liquibase (миграции БД)  
+- Liquibase
 - Swagger / OpenAPI (документация API)  
 - Docker / Docker Compose  
 - Postman (ручное тестирование API)

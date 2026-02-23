@@ -12,12 +12,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/transfers")
 @Tag(name = "Transfers", description = "Переводы средств и история операций")
+@SecurityRequirement(name = "BearerAuth")
 public class TransferController {
 
     private final TransferService transferService;

@@ -17,14 +17,14 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
         version = "v1",
         description = "Система управления банковскими картами. Сначала получите JWT через /api/auth/login и укажите его в Swagger UI (Authorize)."
     ),
-    security = @SecurityRequirement(name = "bearerAuth")
+    security = @SecurityRequirement(name = "BearerAuth")
 )
 @SecurityScheme(
-    name = "bearerAuth",
-    type = SecuritySchemeType.HTTP,
-    scheme = "bearer",
-    bearerFormat = "JWT"
-)
+	    name = "BearerAuth",
+	    type = SecuritySchemeType.HTTP,
+	    scheme = "bearer",
+	    bearerFormat = "JWT"
+	)
 public class OpenApiConfig {
 }
 

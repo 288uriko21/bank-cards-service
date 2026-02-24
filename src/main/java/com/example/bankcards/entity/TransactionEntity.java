@@ -13,12 +13,10 @@ public class TransactionEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	// С какой карты списали
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "from_card_id")
 	private CardEntity fromCard;
 
-	// На какую карту зачислили
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "to_card_id")
 	private CardEntity toCard;
@@ -52,7 +50,7 @@ public class TransactionEntity {
 		this.createdAt = LocalDateTime.now();
 	}
 
-	// геттеры/сеттеры
+
 
 	public Long getId() {
 		return id;

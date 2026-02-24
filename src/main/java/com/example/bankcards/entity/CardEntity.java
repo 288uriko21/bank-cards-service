@@ -13,7 +13,6 @@ public class CardEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Номер карты в БД будем хранить как строку (потом добавим шифрование)
     @Column(nullable = false, unique = true, length = 32)
     private String cardNumber;
 
@@ -27,7 +26,6 @@ public class CardEntity {
     @Column(nullable = false)
     private BigDecimal balance;
 
-    // Владелец карты (многие карты к одному пользователю)
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id")
     private UserEntity owner;

@@ -16,12 +16,11 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    // секрет лучше вынести в application.yml и зашифровать,
-    // здесь для простоты — захардкоженный BASE64-ключ
+
     private static final String SECRET_KEY =
             "bXktdmVyeS1zZWNyZXQtYW5kLWxvbmdzZWNyZXQta2V5LXN0cmluZw==";
 
-    // время жизни токена, мс (например, 1 час)
+
     private static final long EXPIRATION_MS = 60 * 60 * 1000;
 
     private Key getSigningKey() {

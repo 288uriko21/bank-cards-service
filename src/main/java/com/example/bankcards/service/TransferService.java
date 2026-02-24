@@ -47,11 +47,10 @@ public class TransferService {
         CardEntity to = cardRepository.findById(request.getToCardId())
                 .orElseThrow(() -> new IllegalArgumentException("To card not found"));
 
-        // находим пользователя по username вместо userId
+
         UserEntity user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Проверка, что обе карты принадлежат этому пользователю
         if (!from.getOwner().getId().equals(user.getId()) ||
             !to.getOwner().getId().equals(user.getId())) {
             throw new IllegalArgumentException("Cards must belong to the same user");
@@ -135,12 +134,10 @@ public class TransferService {
             throw new IllegalArgumentException("Amount must be positive");
         }
 
-        // USER может списывать только со своих карт, ADMIN — с любых
         if (!isAdmin && !from.getOwner().getId().equals(user.getId())) {
             throw new IllegalArgumentException("You can transfer only from your own cards");
         }
 
-        // Проверка статусов карт
         if (from.getStatus() != CardStatus.ACTIVE || to.getStatus() != CardStatus.ACTIVE) {
             throw new IllegalArgumentException("Both cards must be ACTIVE");
         }
@@ -170,7 +167,6 @@ public class TransferService {
             }
         }
 
-        // Проверка баланса
         if (from.getBalance().compareTo(amount) < 0) {
             TransactionEntity failedTx = new TransactionEntity(
                     from,
@@ -185,7 +181,6 @@ public class TransferService {
             throw new BusinessException("Not enough funds");
         }
 
-        // Успешный перевод
         from.setBalance(from.getBalance().subtract(amount));
         to.setBalance(to.getBalance().add(amount));
 

@@ -3,7 +3,7 @@ package com.example.bankcards.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "users") // имя таблицы в БД
+@Table(name = "users") 
 public class UserEntity {
 
     @Id
@@ -17,9 +17,9 @@ public class UserEntity {
     private String password;
 
     @Column(nullable = false, length = 20)
-    private String role; // например: "ADMIN" или "USER"
+    private String role; 
 
-    // пустой конструктор обязателен для JPA
+
     public UserEntity() {
     }
 

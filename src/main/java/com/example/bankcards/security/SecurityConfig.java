@@ -32,10 +32,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                // мы работаем как stateless API
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // открытые эндпоинты
                         .requestMatchers("/ping").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers(
@@ -44,28 +42,22 @@ public class SecurityConfig {
                                 "/swagger-ui/**"
                         ).permitAll()
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        // только ADMIN может вызывать GET /api/cards (все карты)
                         .requestMatchers(HttpMethod.GET, "/api/cards").hasRole("ADMIN")
 
-                        // управление статусом карт — только ADMIN
                         .requestMatchers(HttpMethod.PATCH, "/api/cards/*/block").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/cards/*/activate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/cards/*").hasRole("ADMIN")
 
-                        // запрос блокировки своей карты — любой залогиненный
                         .requestMatchers(HttpMethod.POST, "/api/cards/*/block-request").authenticated()
 
-                        // остальные операции с картами (создание, /my и т.п.)
                         .requestMatchers("/api/cards/**").authenticated()
 
-                        // всё остальное тоже требует логина
                         .anyRequest().authenticated()
                 )
-                // выключаем formLogin и httpBasic — теперь только JWT
+               
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable());
 
-        // наш JWT-фильтр должен отработать до стандартного UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
